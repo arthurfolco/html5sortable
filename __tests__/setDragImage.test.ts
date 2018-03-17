@@ -1,19 +1,42 @@
-/* global describe,test,expect */
+/* global describe,test,expect,jest,Event */
 import setDragImage from '../src/setDragImage'
 import {mockInnerHTML} from './helpers'
 
 describe('Testing setDragImage', () => {
-
+  // setup test html
   document.body.innerHTML = mockInnerHTML
-
+  // mock element
+  let element = document.querySelector('.li-first')
+  element.getClientRects = () => {
+    return [{
+      left: 10,
+      right: 7,
+      top: 7,
+      bottom: 10
+    }]
+  }
+  // create MockEvent
   class DragEvent extends Event {
-    constructor(name, data) {
-      this.dataTransfer = {
-        effectAllowed: 'fake',
-        setDragImage: () => {}
+  /* eslint-disable constructor-super */
+    constructor (name, data = null) {
+      this.pageX = 100 // eslint-disable-line no-this-before-super
+      this.pageY = 200 // eslint-disable-line no-this-before-super
+      this.dataTransfer = { // eslint-disable-line no-this-before-super
+        'effectAllowed': 'fake',
+        'setData': (data) => {
+          this.data = data // eslint-disable-line no-this-before-super
+        },
+        'setDragImage': (element, posX, posY) => {
+          this.dragItem = { // eslint-disable-line no-this-before-super
+            element: element,
+            posX: posX,
+            posY: posY
+          }
+        }
       }
     }
-    get() {
+    /* eslint-enable constructor-super */
+    get () {
       return this
     }
   }
@@ -42,89 +65,40 @@ describe('Testing setDragImage', () => {
 
   test('Event supports Drag', () => {
     let event = new DragEvent('dragstart')
-    setDragImage(event, null, null)
+    // execute
+    setDragImage(event, element)
+    // assert
     expect(event.dataTransfer.effectAllowed).toEqual('copyMove')
+    expect(event.data).toEqual('text')
+    expect(event.dragItem.element).toEqual(element)
+    expect(event.dragItem.posX).toEqual(90)
+    expect(event.dragItem.posY).toEqual(193)
   })
 
-  // let body = document.querySelector('body')
-  //
-  // body.innerHTML = `<ul class="sortable"><li class="first">dragged item</li><li>item 2</li></ul>`
-  //
-  // // mock dragged item
-  // let draggedItem = body.querySelector('.first')
-  // draggedItem.getClientRects = () => {
-  //   return [{
-  //     left: 5,
-  //     top: 5
-  //   }]
-  // }
-  // // mock event
-  // let e = {
-  //   pageX: 100,
-  //   pageY: 200,
-  //   dataTransfer: {
-  //     text: undefined,
-  //     draggedItem: undefined,
-  //     x: undefined,
-  //     y: undefined,
-  //     setData: function (type, val) {
-  //       e.dataTransfer[type] = val
-  //     },
-  //     setDragImage: function (draggedItem, x, y) {
-  //       e.dataTransfer.draggedItem = draggedItem
-  //       e.dataTransfer.x = x
-  //       e.dataTransfer.y = y
-  //     },
-  //     effectAllowed: ''
-  //   }
-  // }
-  //
-  // test('sets the dataTransfer options correctly (_attachGhost)', () => {
-  //   sortable.__testing._attachGhost(e, {
-  //     draggedItem: 'test-item',
-  //     x: 10,
-  //     y: 20
-  //   })
-  //
-  //   expect(e.dataTransfer.effectAllowed).toEqual('copyMove')
-  //   expect(e.dataTransfer.text).toEqual('arbitrary-content')
-  //   expect(e.dataTransfer.draggedItem).toEqual('test-item')
-  //   expect(e.dataTransfer.x).toEqual(10)
-  //   expect(e.dataTransfer.y).toEqual(20)
-  // })
-  //
-  // test('sets item correctly from dragged item (_makeGhost)', () => {
-  //   let ghost = sortable.__testing._makeGhost(draggedItem)
-  //   expect(ghost.draggedItem.innerHTML).toEqual(draggedItem.innerHTML)
-  // })
-  //
-  // test('sets x & y correctly (_addGhostPos)', () => {
-  //   let ghost = sortable.__testing._addGhostPos(e, {
-  //     draggedItem: draggedItem
-  //   })
-  //
-  //   expect(ghost.x).toEqual(95)
-  //   expect(ghost.y).toEqual(195)
-  // })
-  //
-  // test('uses provided x & y correctly (_addGhostPos)', () => {
-  //   let ghost = sortable.__testing._addGhostPos(e, {
-  //     draggedItem: draggedItem,
-  //     x: 10,
-  //     y: 20
-  //   })
-  //
-  //   expect(ghost.x).toEqual(10)
-  //   expect(ghost.y).toEqual(20)
-  // })
-  //
-  // test('attaches ghost completely (_getGhost)', () => {
-  //   sortable.__testing._getGhost(e, draggedItem)
-  //
-  //   expect(e.dataTransfer.effectAllowed).toEqual('copyMove')
-  //   expect(e.dataTransfer.text).toEqual('arbitrary-content')
-  //   expect(e.dataTransfer.draggedItem).toEqual(draggedItem)
-  //   expect(e.dataTransfer.x).toEqual(95)
-  //   expect(e.dataTransfer.y).toEqual(195)
-  // })
+  test('Custom DragImageFunction', () => {
+    let event = new DragEvent('dragstart')
+    let mockCustomDragImageFn = jest.fn().mockName('mockCustomDragImageFn').mockReturnValue({
+      element: element,
+      posX: 111,
+      posY: 222
+    })
+    // execute
+    setDragImage(event, element, mockCustomDragImageFn)
+    // assert
+    expect(event.dataTransfer.effectAllowed).toEqual('copyMove')
+    expect(event.data).toEqual('text')
+    // custom function to be called once
+    expect(mockCustomDragImageFn.mock.calls.length).toBe(1)
+    // first argument in call
+    expect(mockCustomDragImageFn.mock.calls[0][0]).toBe(element)
+    // second argument in call
+    expect(mockCustomDragImageFn.mock.calls[0][1]).toEqual({
+      left: 10,
+      right: 7,
+      top: 7,
+      bottom: 10
+    })
+    // third argument in call
+    expect(mockCustomDragImageFn.mock.calls[0][2]).toBe(event)
+  })
 })

@@ -15,7 +15,6 @@ import _makePlaceholder from './makePlaceholder'
 import _getElementHeight from './elementHeight'
 import _getHandles from './getHandles'
 import setDragImage from './setDragImage'
-
 /*
  * variables global to the plugin
  */

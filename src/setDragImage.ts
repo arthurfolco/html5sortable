@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import {default as offset, offsetObject} from './offset'
+import {default as offset, offsetObject} from './offset' // eslint-disable-line no-unused-vars
 /**
  * defaultDragImage returns the current item as dragged image
  * @param {Element} draggedElement - the item that the user drags
@@ -23,11 +23,11 @@ let defaultDragImage = (draggedElement: Element, elementOffset: offsetObject, ev
  */
 export default (event: DragEvent, draggedElement: Element, customDragImage: Function = defaultDragImage): void => {
   // check if event is provided
-  if(!(event instanceof Event)) {
+  if (!(event instanceof Event)) {
     throw new Error('setDragImage requires a DragEvent as the first argument.')
   }
   // check if draggedElement is provided
-  if(!(draggedElement instanceof Element)) {
+  if (!(draggedElement instanceof Element)) {
     throw new Error('setDragImage requires the dragged element as the second argument.')
   }
   // check if setDragImage method is available

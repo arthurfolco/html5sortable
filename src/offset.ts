@@ -1,8 +1,8 @@
-export interface offsetObject {
-  left: number,
-  right: number,
-  top: number,
-  bottom: number
+export interface offsetObject { // eslint-disable-line no-undef
+  'left': number,
+  'right': number,
+  'top': number,
+  'bottom': number
 }
 /**
  * @param {Element} element
